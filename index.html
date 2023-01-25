@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino</title>
+    <style>
+        #can {
+            border: 2px solid black;
+            margin: 50px 350px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="can" width="500" height="500"></canvas>
+    <script src="https://code.jquery.com/jquery-2.1.0.js"></script>
+    <script>
+        var can = document.getElementById("can");
+        var ctx = can.getContext("2d");
+        var width = can.width;
+        var height = can.height;
+        var blockSize = 13;
+        var score = 0;
+        var Block = function(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+        };
+        Block.prototype.draw = function() {
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, blockSize, blockSize);
+        };
+        var Barrier = function(speedX, type) {
+            this.type = type;
+            if (this.type === "cactus"){
+                this.blocks = [
+                    new Block(width + blockSize * 2, height - (50 + blockSize), "black"),
+                    new Block(width + blockSize * 2, height - (50 + blockSize * 2), "black"),
+                    new Block(width + blockSize * 2, height - (50 + blockSize * 2), "black"),
+                    new Block(width + blockSize * 2, height - (50 + blockSize * 3), "black"),
+                    new Block(width + blockSize * 2, height - (50 + blockSize * 4), "black"),
+                    new Block(width + blockSize * 2, height - (50 + blockSize * 5), "black"),
+                    new Block(width + blockSize * 4, height - (50 + blockSize * 3), "black"),
+                    new Block(width + blockSize * 4, height - (50 + blockSize * 4), "black"),
+                    new Block(width, height - (50 + blockSize * 3), "black"),
+                    new Block(width, height - (50 + blockSize * 4), "black"),
+                    new Block(width + blockSize, height - (50 + blockSize * 3), "black"),
+                    new Block(width + blockSize * 3, height - (50 + blockSize * 3), "black")
+                ];
+            } else {
+                this.blocks = [
+                    new Block(width, height - (50 + blockSize * 7), "black"),
+                    new Block(width, height - (50 + blockSize * 8), "black"),
+                    new Block(width - blockSize, height - (50 + blockSize * 8), "black"),
+                    new Block(width + blockSize, height - (50 + blockSize * 7), "black"),
+                    new Block(width + blockSize * 2, height - (50 + blockSize * 8), "black"),
+                    new Block(width + blockSize * 3, height - (50 + blockSize * 9), "black"),
+                    new Block(width + blockSize * 2, height - (50 + blockSize * 7), "black"),
+                    new Block(width + blockSize * 3, height - (50 + blockSize * 7), "black"),
+                    new Block(width + blockSize * 4, height - (50 + blockSize * 7), "black")
+                ];
+            };
+            this.speedX = speedX;
+            this.status = false;
+        };
+        Barrier.prototype.draw = function() {
+            for (var i = 0; i<this.blocks.length; i++) {
+                this.blocks[i].draw();
+            };
+            if (this.type === "bird") {
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(this.blocks[1].x + (blockSize/2), this.blocks[1].y + (blockSize/2), blockSize/5, 0, Math.PI * 2, true);
+                ctx.fill();
+            };
+        };
+        Barrier.prototype.checkStatus = function() {
+            if (this.blocks[this.blocks.length - 1].x <= 0) {
+                this.status = true;
+            };
+        };
+        Barrier.prototype.move = function() {
+            for (var i = 0; i<this.blocks.length; i++) {
+                this.blocks[i].x -= this.speedX;
+            };
+        };
+        var Dino = function(speedY, downTime) {
+            this.blocks = [
+                new Block(40, height - (50 + blockSize), "green"),
+                new Block(40, height - (50 + blockSize * 2), "green"),
+                new Block(40 + (blockSize * 2), height - (50 + blockSize), "green"),
+                new Block(40 + (blockSize * 2), height - (50 + blockSize * 2), "green"),
+                new Block(40 + blockSize, height - (50 + blockSize * 3), "green"),
+                new Block(40 + blockSize, height - (50 + blockSize * 4), "green"),
+                new Block(40, height - (50 + blockSize * 4), "green"),
+                new Block(40 - blockSize, height - (50 + blockSize * 5), "green"),
+                new Block(40 + blockSize, height - (50 + blockSize * 5), "green"),
+                new Block(40 + blockSize, height - (50 + blockSize * 6), "green"),
+                new Block(40 + blockSize, height - (50 + blockSize * 7), "green"),
+                new Block(40 + blockSize, height - (50 + blockSize * 8), "green"),
+                new Block(40 + (blockSize * 2), height - (50 + blockSize * 6), "green"),
+                new Block(40 + (blockSize * 3), height - (50 + blockSize * 6), "green"),
+                new Block(40 + (blockSize * 3), height - (50 + blockSize * 5), "green"),
+                new Block(40 + blockSize, height - (50 + blockSize * 9), "green"),
+                new Block(40 + blockSize, height - (50 + blockSize * 10), "green"),
+                new Block(40 + (blockSize * 2), height - (50 + blockSize * 9), "green"),
+                new Block(40 + (blockSize * 2), height - (50 + blockSize * 10), "green"),
+                new Block(40 + (blockSize * 3), height - (50 + blockSize * 9), "green"),
+                new Block(40 + (blockSize * 3), height - (50 + blockSize * 10), "green")
+            ];
+            this.speedY = speedY;
+            this.direction = "right";
+            this.downTime = downTime;
+        };
+        Dino.prototype.right = function() {
+            this.blocks[1] = new Block(40, height - (50 + blockSize * 2), "green");
+            this.blocks[3] = new Block(40 + (blockSize * 2), height - (50 + blockSize * 2), "green");
+            this.blocks[4] = new Block(40 + blockSize, height - (50 + blockSize * 3), "green");
+            this.blocks[5] = new Block(40 + blockSize, height - (50 + blockSize * 4), "green");
+            this.blocks[6] = new Block(40, height - (50 + blockSize * 4), "green");
+            this.blocks[7] = new Block(40 - blockSize, height - (50 + blockSize * 5), "green");
+            this.blocks[8] = new Block(40 + blockSize, height - (50 + blockSize * 5), "green");
+            this.blocks[9] = new Block(40 + blockSize, height - (50 + blockSize * 6), "green");
+            this.blocks[10] = new Block(40 + blockSize, height - (50 + blockSize * 7), "green");
+            this.blocks[11] = new Block(40 + blockSize, height - (50 + blockSize * 8), "green");
+            this.blocks[12] = new Block(40 + (blockSize * 2), height - (50 + blockSize * 6), "green");
+            this.blocks[13] = new Block(40 + (blockSize * 3), height - (50 + blockSize * 6), "green");
+            this.blocks[14] = new Block(40 + (blockSize * 3), height - (50 + blockSize * 5), "green");
+            this.blocks[15] = new Block(40 + blockSize, height - (50 + blockSize * 9), "green");
+            this.blocks[16] = new Block(40 + blockSize, height - (50 + blockSize * 10), "green");
+            this.blocks[17] = new Block(40 + (blockSize * 2), height - (50 + blockSize * 9), "green");
+            this.blocks[18] = new Block(40 + (blockSize * 2), height - (50 + blockSize * 10), "green");
+            this.blocks[19] = new Block(40 + (blockSize * 3), height - (50 + blockSize * 9), "green");
+            this.blocks[20] = new Block(40 + (blockSize * 3), height - (50 + blockSize * 10), "green");
+        };
+        Dino.prototype.down = function() {
+            this.blocks[8] = new Block(40 + blockSize * 2, height - (50 + blockSize * 4), "green");
+            this.blocks[9] = new Block(40 + blockSize * 3, height - (50 + blockSize * 4), "green");
+            this.blocks[12] = new Block(40 + blockSize * 3, height - (50 + blockSize * 3), "white");
+            this.blocks[13] = new Block(40 + blockSize * 3, height - (50 + blockSize * 2), "white");
+            this.blocks[14] = new Block(40 + blockSize * 3, height - (50 + blockSize), "white");
+            this.blocks[10] = new Block(40 + blockSize * 4, height - (50 + blockSize * 4), "green");
+            this.blocks[11] = new Block(40 + blockSize * 5, height - (50 + blockSize * 4), "green");
+            this.blocks[15] = new Block(40 + blockSize * 6, height - (50 + blockSize * 4), "green");
+            this.blocks[16] = new Block(40 + blockSize * 7, height - (50 + blockSize * 4), "green");
+            this.blocks[17] = new Block(40 + blockSize * 6, height - (50 + blockSize * 2), "green");
+            this.blocks[18] = new Block(40 + blockSize * 7, height - (50 + blockSize * 3), "green");
+            this.blocks[19] = new Block(40 + blockSize * 6, height - (50 + blockSize * 3), "green");
+            this.blocks[20] = new Block(40 + blockSize * 7, height - (50 + blockSize * 2), "green");
+        };
+        Dino.prototype.run = function() {
+            if (this.blocks[0].x === 40) {
+                    this.blocks[0] = new Block(40 - blockSize, height - (50 + blockSize), "green");
+                    this.blocks[2] = new Block(this.blocks[2].x - blockSize, height - (50 + blockSize), "green");
+            } else {
+                    this.blocks[0] = new Block(40, height - (50 + blockSize), "green");
+                    this.blocks[2] = new Block(this.blocks[2].x + blockSize, height - (50 + blockSize), "green");
+            };
+        };
+        Dino.prototype.draw = function() {
+            for (var i = 0; i<this.blocks.length; i++) {
+                this.blocks[i].draw();
+            };
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(this.blocks[16].x + (blockSize/2), this.blocks[16].y + (blockSize/2), blockSize/4, 0, Math.PI * 2, true);
+            ctx.fill();
+        };
+        Dino.prototype.move = function() {
+            if (this.direction === "right") {
+                this.right();
+                this.run();
+            } else if (this.direction === "up") {
+                for (var i = 0; i<this.blocks.length; i++) {
+                    this.blocks[i].y -= this.speedY;
+                };
+                this.speedY -= 3;
+                if (this.blocks[0].y >= height - (50 + blockSize)) {
+                    this.right();
+                    this.blocks[0] = new Block(40, height - (50 + blockSize), "green");
+                    this.blocks[2] = new Block(40 + (blockSize * 2), height - (50 + blockSize), "green");
+                    this.direction = "right";
+                };
+            } else if (this.direction === "down") {
+                this.run();
+                if (this.downTime === 0) {
+                    this.direction = "right";
+                };
+                this.down();
+                this.downTime -= 1;
+            };
+        };
+        Dino.prototype.checkDirection = function(newDirection) {
+            if (this.direction === "up") {
+                return;
+            } else if (this.direction === "down" && newDirection === "up") {
+                return;
+            } else {
+                this.direction = newDirection;
+                if (newDirection === "up") {
+                    this.speedY = 25;
+                } else {
+                    this.downTime = 10;
+                };
+            };
+        };
+        var gameOver = function() {
+            clearInterval(game);
+            ctx.fillStyle = "Black";
+            ctx.font = "30px Times New Roman";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("Game over", width/2, height/2);
+        };
+        var drawField = function() {
+            ctx.fillStyle = "Gray";
+            ctx.font = "25px Times New Roman";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText(score, 20, 20);
+            ctx.fillRect(0, height - 50, width, 50)
+        };
+        var newElement = function() {
+            var check = Math.floor(Math.random() * 2);
+            if (check === 1) {
+                barrier = new Barrier(barrier.speedX, "cactus");
+            } else {
+                barrier = new Barrier(barrier.speedX, "bird");
+            }
+        };
+        var createBarrier = function(element) {
+            element.checkStatus();
+            if (element.status === true) {
+                newElement();
+            };
+        };
+        var checkCollision = function(barrier, dino) {
+            for (var i1 = 0; i1<dino.blocks.length; i1++) {
+                var dinoBlockRow = Math.floor(dino.blocks[i1].x/blockSize);
+                var dinoBlockCol = Math.floor(dino.blocks[i1].y/blockSize);
+                for (var i2 = 0; i2<barrier.blocks.length; i2++) {
+                    var barrierBlockRow = Math.floor(barrier.blocks[i2].x/blockSize);
+                    var barrierBlockCol = Math.floor(barrier.blocks[i2].y/blockSize);
+                    if(dinoBlockRow === barrierBlockRow && dinoBlockCol === barrierBlockCol) {
+                        gameOver();
+                    };
+                };
+            };
+        };
+        var dino = new Dino(0, 0);
+        var barrier = new Barrier(10, "cactus");
+        var game = setInterval(function() {
+            ctx.clearRect(0, 0, width, height);
+            drawField();
+            dino.move();
+            barrier.move();
+            checkCollision(barrier, dino);
+            dino.draw();
+            barrier.draw();
+            createBarrier(barrier);
+            score += 1;
+            if (score / 200 === Math.floor(score / 200)) {
+                barrier.speedX += 1;
+            };
+        }, 50);
+        var direction = {
+            87: "up",
+            83: "down"
+        };
+        $("body").keydown(function(event) {
+            var newDirection = direction[event.keyCode];
+            if(newDirection !== undefined) {
+                dino.checkDirection(newDirection);
+            };
+        });
+    </script>
+</body>
+</html>
